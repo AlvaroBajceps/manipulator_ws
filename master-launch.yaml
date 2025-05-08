@@ -3,21 +3,8 @@
 ### Example configuration:
 launch:
 
-#  - include:
-#     file: "$(find-pkg-share can_bridge)/launch/can_bridge.yaml"
-
-#  - include:
-#     file: "$(find-pkg-share ros2_socketcan)/launch/socket_can_bridge.launch.xml"
-#     arg:
-#       -
-#         name: "interface"
-#         value: "vxcan1"
-#       -
-#         name: "enable_can_fd"
-#         value: "false"
-#       -
-#         name: "from_can_bus_topic"
-#         value: "/CAN/RX/raw"
-#       -
-#         name: "to_can_bus_topic"
-#         value: "/CAN/TX/raw"
+- node:
+    pkg: "manipulator_simple"
+    exec: "manipulator_simple_node"
+    name: "manipulator_simple_node"
+    namespace: "raptor"
