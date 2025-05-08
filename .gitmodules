@@ -1,0 +1,3 @@
+[submodule "src/rex_interfaces"]
+	path = src/rex_interfaces
+	url = https://github.com/Bitnut01/rex_interfaces.git
