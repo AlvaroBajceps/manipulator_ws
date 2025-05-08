@@ -7,6 +7,9 @@
             },
             "includePath": [
                 "/opt/ros/jazzy/include/**",
+                "${workspaceFolder}/src/manipulator_simple/include/**",
+                "${workspaceFolder}/src/rex_interfaces/include/**",
+                "${workspaceFolder}/src/libVescCan/include/**",
                 "/usr/include/**"
             ],
             "name": "ROS",
