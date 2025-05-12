@@ -10,18 +10,15 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 find_package(rex_interfaces REQUIRED)
 find_package(libVescCan REQUIRED)
 
-# Message generation
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/ManipulatorControl.msg"
-  DEPENDENCIES std_msgs rex_interfaces
-)
 
 # Executable
-add_executable(manipulator_simple_node src/main.cpp)
+add_executable(manipulator_simple_node 
+  src/main.cpp
+  src/ManipulatorSimple.cpp
+)
 
 ament_target_dependencies(manipulator_simple_node
   rclcpp
@@ -33,9 +30,6 @@ target_include_directories(${PROJECT_NAME}_node PUBLIC
    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-# Link generated message typesupport
-rosidl_get_typesupport_target(cpp_typesupport_target
-  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 target_link_libraries(manipulator_simple_node
   ${cpp_typesupport_target}
