@@ -1,21 +1,21 @@
 networks:
   default:
-    name: ros-core-network          # This network is a direct dependency to ros-core container
+    name: ros-core-network
     external: true
 
 services:
-  ros-template:                     # replace every ros-template with appropriate name e.g. ros-quad-rover-kin
+  ros-manipulator:
     build:
       context: ./.devcontainer
-    image: ros-template             # replace every ros-template with appropriate name e.g. ros-quad-rover-kin
-    container_name: ros-template    # replace every ros-template with appropriate name e.g. ros-quad-rover-kin
-    hostname: ros-template          # replace every ros-template with appropriate name e.g. ros-quad-rover-kin
+    image: ros-manipulator
+    container_name: ros-manipulator
+    hostname: ros-manipulator
     init: true
     ports:
-      - "[ssh-port-here]:22"        # Assign ssh port here (left side) 2122 is reserved
+      - "2522:22"
     environment:
       - TZ=Europe/Warsaw
-      - ROS_ENABLE_AUTOSTART=0
+      - ROS_ENABLE_AUTOSTART=1
       - ROS_BUILD_ON_STARTUP=on-failure
     volumes:
       - type: bind
