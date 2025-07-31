@@ -6,8 +6,9 @@ networks:
 services:
   ros-manipulator:
     build:
-      context: ./.devcontainer
-    image: ros-manipulator
+      context: .
+      dockerfile: ./.devcontainer/Dockerfile
+    image: alvarobajceps/ros-manipulator
     container_name: ros-manipulator
     hostname: ros-manipulator
     init: true
@@ -20,7 +21,7 @@ services:
     volumes:
       - type: bind
         source: ./
-        target: /home/rex/raptor_ws
+        target: /mnt/local
         bind:
           create_host_path: true
       - type: bind

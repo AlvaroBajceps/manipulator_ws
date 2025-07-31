@@ -38,19 +38,35 @@ RUN echo "source ~/raptor_ws/install/setup.bash\n" >> /home/${USERNAME}/.bashrc
 RUN apt update && apt upgrade -y
 
 # Environment setup
-RUN mkdir /home/${USERNAME}/raptor_ws
-# Add required ros packages here
 RUN apt install -y ros-jazzy-ros2-socketcan libasio-dev libceres-dev ros-jazzy-diagnostic-updater ros-jazzy-diagnostic-updater ros-jazzy-rtcm-msgs ros-jazzy-nmea-msgs
+
+# Pass local directory to the container
+USER ${USERNAME}
+RUN mkdir -p /home/${USERNAME}/raptor_ws
+WORKDIR /home/${USERNAME}/raptor_ws
+
+# Copy the local files to the container
+COPY --chown=${USERNAME}:${USERNAME} . /home/${USERNAME}/raptor_ws
+RUN rm -rf /home/${USERNAME}/raptor_ws/build
+RUN rm -rf /home/${USERNAME}/raptor_ws/log
+RUN rm -rf /home/${USERNAME}/raptor_ws/install
 
 # Fix github 'unsafe' directory
 USER ${USERNAME}
 RUN git config --global --add safe.directory /home/rex/raptor_ws
+
+# Look for submodules
+RUN git submodule update --init --recursive
+
+# Build the workspace
+RUN bash -c "source /opt/ros/jazzy/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --event-handlers console_start_end+ console_direct+ --executor parallel"
+
 # Manage public ssh keys
 RUN rm -rf /home/${USERNAME}/.ssh
 RUN mkdir -m 0700 /home/${USERNAME}/.ssh
 RUN touch /home/${USERNAME}/.ssh/authorized_keys
 RUN chmod 640 /home/${USERNAME}/.ssh/authorized_keys
-ADD --chown=${USERNAME}:${USERNAME} public_keys.d /home/${USERNAME}/.ssh/public_keys.d
+ADD --chown=${USERNAME}:${USERNAME} ./.devcontainer/public_keys.d /home/${USERNAME}/.ssh/public_keys.d
 RUN cat /home/${USERNAME}/.ssh/public_keys.d/*.pub >> /home/${USERNAME}/.ssh/authorized_keys || true
 RUN rm -rf /home/${USERNAME}/.ssh/public_keys.d
 
