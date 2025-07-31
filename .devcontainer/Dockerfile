@@ -71,7 +71,7 @@ RUN cat /home/${USERNAME}/.ssh/public_keys.d/*.pub >> /home/${USERNAME}/.ssh/aut
 RUN rm -rf /home/${USERNAME}/.ssh/public_keys.d
 
 USER root
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY .devcontainer/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 CMD [ "/usr/local/bin/docker-entrypoint.sh" ]

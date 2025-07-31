@@ -1,4 +1,4 @@
-name: Build and publish Raptor Ros Core Docker Image
+name: Build and Publish Raptors Manipulator Docker Image
 
 on:
   push:
