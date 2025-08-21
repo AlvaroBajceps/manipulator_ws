@@ -1,19 +1,13 @@
-networks:
-  default:
-    name: ros-core-network
-    external: true
-
 services:
   ros-manipulator:
     build:
       context: .
       dockerfile: ./.devcontainer/Dockerfile
-    image: alvarobajceps/ros-manipulator
+    image: alvarobajceps/ros-manipulator:latest
     container_name: ros-manipulator
     hostname: ros-manipulator
+    network_mode: "host"
     init: true
-    ports:
-      - "2522:22"
     environment:
       - TZ=Europe/Warsaw
       - ROS_ENABLE_AUTOSTART=1
