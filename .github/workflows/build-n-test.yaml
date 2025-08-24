@@ -31,4 +31,4 @@ jobs:
           build-args: |
             SSH_PORT=2522
           push: false
-          cache-from: type=registry,ref=wisniax/ros-core:buildcache-amd64
+          cache-from: type=registry,ref=alvarobajceps/ros-manipulator:buildcache-amd64
