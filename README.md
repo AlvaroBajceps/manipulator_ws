@@ -32,7 +32,7 @@
 # Container features
 ## SSH into the container
 `ssh rex@[ip-here] -p [port-here]`
-e.g. `ssh rex@localhost -p 2521`
+e.g. `ssh rex@localhost -p 2522`
 
 ## Build the repo
 > Obviously only works from inside the container ;)
