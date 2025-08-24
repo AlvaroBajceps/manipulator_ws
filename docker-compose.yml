@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: ./.devcontainer/Dockerfile
+      args:
+        SSH_PORT: 2522
     image: alvarobajceps/ros-manipulator:latest
     container_name: ros-manipulator
     hostname: ros-manipulator

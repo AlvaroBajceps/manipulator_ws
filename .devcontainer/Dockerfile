@@ -3,6 +3,7 @@ FROM wisniax/ros-rover-base:latest
 # Dockerfile for ROS-JAZZY
 ARG USERNAME='rex'
 ARG PASSWORD='changeme'
+ARG SSH_PORT=22
 
 # Default configuration
 ENV ROS_ENABLE_AUTOSTART=0
@@ -13,8 +14,8 @@ RUN useradd -m -s /bin/bash -g 1000 ${USERNAME}
 RUN echo "${USERNAME}:${PASSWORD}" | chpasswd
 RUN usermod -aG sudo ${USERNAME}
 
-# Change ssh port
-RUN sed -i '/^#\?Port/ { s/^#//; s/Port .*/Port 2522/; }' /etc/ssh/sshd_config
+# Change ssh port and expose it
+RUN sed -i "/^#\?Port/ { s/^#//; s/Port .*/Port ${SSH_PORT}/; }" /etc/ssh/sshd_config
 
 # Colorful prompts ah yee
 RUN sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/' /home/${USERNAME}/.bashrc
