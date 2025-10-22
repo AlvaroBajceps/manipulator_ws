@@ -1,8 +1,11 @@
 #include "manipulator_simple/ManipulatorSimple.hpp"
 
-ManipulatorSimple::ManipulatorSimple(rclcpp::Node::SharedPtr node) : mNode(node)
+ManipulatorSimple::ManipulatorSimple(rclcpp::Node::SharedPtr node) : mNode(node), mLastRoverStatus(std::make_shared<rex_interfaces::msg::RoverStatus>())
 {
     mSubMqtt = mNode->create_subscription<rex_interfaces::msg::ManipulatorMqttMessage>("/MQTT/ManipulatorControl", 100, std::bind(&ManipulatorSimple::handleInput, this, std::placeholders::_1));
+    mSubStatus = mNh->create_subscription<rex_interfaces::msg::RoverStatus>(
+        RosCanConstants::RosTopics::mqtt_rover_status,
+        qos, std::bind(&MotorControl::handleRoverStatus, this, std::placeholders::_1));
     mPubCan = mNode->create_publisher<rex_interfaces::msg::ManipulatorControl>("/CAN/TX/manipulator_ctl", 100);
     
     mLastCommandMessage = rex_interfaces::msg::ManipulatorControl();
@@ -42,11 +45,25 @@ void ManipulatorSimple::handleInput(rex_interfaces::msg::ManipulatorMqttMessage 
     mLastCommandMessage.header.stamp = manipulatorControlMessage.header.stamp;
 }
 
+void ManipulatorSimple::handleRoverStatus(const rex_interfaces::msg::RoverStatus::ConstSharedPtr &msg)
+{
+    mLastRoverStatus = msg;
+    setCorrectState();
+}
+
 void ManipulatorSimple::publishCommand()
 {
     rex_interfaces::msg::ManipulatorControl messageToSend;
 
-    messageToSend = rex_interfaces::msg::ManipulatorControl(mLastCommandMessage);
+    if(mLastRoverStatus->communication_state == VESC_STATUS_10_COMMUNICATIONSTATE_OPENED
+        && mLastRoverStatus->control_mode != VESC_STATUS_10_CONTROLMODE_ESTOP)
+    {
+        messageToSend = rex_interfaces::msg::ManipulatorControl(mLastCommandMessage);
+    }
+    else
+    {
+        messageToSend = rex_interfaces::msg::ManipulatorControl();
+    }
     messageToSend.header.stamp = rclcpp::Time();
     mPubCan->publish(messageToSend);
 }
