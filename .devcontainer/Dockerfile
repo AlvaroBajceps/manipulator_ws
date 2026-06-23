@@ -8,13 +8,17 @@ RUN userdel -r ubuntu
 ARG USERNAME='rex'
 ARG PASSWORD='changeme'
 ARG SSH_PORT=22
+ARG USER_UID=1001
+ARG USER_GID=1000
 
 # Default configuration
 ENV ROS_ENABLE_AUTOSTART=0
 ENV ROS_BUILD_ON_STARTUP=on-failure
 
 # Create user
-RUN useradd -m -s /bin/bash ${USERNAME}
+#RUN useradd -m -s /bin/bash ${USERNAME}
+RUN getent group ${USER_GID} || groupadd --gid ${USER_GID} ${USERNAME}
+RUN useradd -m -s /bin/bash --uid ${USER_UID} --gid ${USER_GID} ${USERNAME}
 RUN echo "${USERNAME}:${PASSWORD}" | chpasswd
 RUN usermod -aG sudo ${USERNAME}
 
@@ -34,7 +38,7 @@ RUN mkdir -p /home/${USERNAME}/raptor_ws
 WORKDIR /home/${USERNAME}/raptor_ws
 
 # Copy the local files to the container
-COPY --chown=${USERNAME}:${USERNAME} . /home/${USERNAME}/raptor_ws
+COPY --chown=${USER_UID}:${USER_GID} . /home/${USERNAME}/raptor_ws
 RUN rm -rf /home/${USERNAME}/raptor_ws/build
 RUN rm -rf /home/${USERNAME}/raptor_ws/log
 RUN rm -rf /home/${USERNAME}/raptor_ws/install
@@ -53,7 +57,7 @@ RUN rm -rf /home/${USERNAME}/.ssh
 RUN mkdir -m 0700 /home/${USERNAME}/.ssh
 RUN touch /home/${USERNAME}/.ssh/authorized_keys
 RUN chmod 640 /home/${USERNAME}/.ssh/authorized_keys
-ADD --chown=${USERNAME}:${USERNAME} ./.devcontainer/public_keys.d /home/${USERNAME}/.ssh/public_keys.d
+ADD --chown=${USER_UID}:${USER_GID} ./.devcontainer/public_keys.d /home/${USERNAME}/.ssh/public_keys.d
 RUN cat /home/${USERNAME}/.ssh/public_keys.d/*.pub >> /home/${USERNAME}/.ssh/authorized_keys || true
 RUN rm -rf /home/${USERNAME}/.ssh/public_keys.d
 
