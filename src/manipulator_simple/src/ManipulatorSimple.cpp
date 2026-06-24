@@ -1,6 +1,35 @@
 #include "manipulator_simple/ManipulatorSimple.hpp"
 
-ManipulatorSimple::ManipulatorSimple(rclcpp::Node::SharedPtr node) : mNode(node), mLastRoverStatus(std::make_shared<rex_interfaces::msg::RoverStatus>())
+namespace
+{
+    rex_interfaces::msg::ManipulatorControl prepareStopCommand()
+    {
+        rex_interfaces::msg::ManipulatorControl stopCommand{};
+
+        stopCommand.axes[0].command_id = VESC_COMMAND_SET_DUTY;
+        stopCommand.axes[1].command_id = VESC_COMMAND_SET_DUTY;
+        stopCommand.axes[2].command_id = VESC_COMMAND_SET_DUTY;
+        stopCommand.axes[3].command_id = VESC_COMMAND_SET_DUTY;
+        stopCommand.axes[4].command_id = VESC_COMMAND_SET_DUTY;
+        stopCommand.axes[5].command_id = VESC_COMMAND_SET_DUTY;
+        stopCommand.gripper.command_id = VESC_COMMAND_SET_DUTY;
+
+        stopCommand.axes[0].set_value = 0.0f;
+        stopCommand.axes[1].set_value = 0.0f;
+        stopCommand.axes[2].set_value = 0.0f;
+        stopCommand.axes[3].set_value = 0.0f;
+        stopCommand.axes[4].set_value = 0.0f;
+        stopCommand.axes[5].set_value = 0.0f;
+        stopCommand.gripper.set_value = 0.0f;
+
+        return stopCommand;
+    }
+}
+
+ManipulatorSimple::ManipulatorSimple(rclcpp::Node::SharedPtr node)
+    : mNode(node),
+      mStopCommand(prepareStopCommand()),
+      mLastRoverStatus(std::make_shared<rex_interfaces::msg::RoverStatus>())
 {
     mSubMqtt = mNode->create_subscription<rex_interfaces::msg::RoboticArmControl>("/MQTT/RoboticArmControl", 100, std::bind(&ManipulatorSimple::handleInput, this, std::placeholders::_1));
     mSubStatus = mNode->create_subscription<rex_interfaces::msg::RoverStatus>(
@@ -8,35 +37,18 @@ ManipulatorSimple::ManipulatorSimple(rclcpp::Node::SharedPtr node) : mNode(node)
         rclcpp::QoS(10), std::bind(&ManipulatorSimple::handleRoverStatus, this, std::placeholders::_1));
     mPubCan = mNode->create_publisher<rex_interfaces::msg::ManipulatorControl>("/CAN/TX/manipulator_ctl", 100);
 
-    mLastCommandMessage = rex_interfaces::msg::ManipulatorControl();
-
     mResenderTimer = mNode->create_timer(std::chrono::milliseconds(50), std::bind(&ManipulatorSimple::publishCommand, this));
+    mStopTimer = mNode->create_timer(std::chrono::milliseconds(500), std::bind(&ManipulatorSimple::handleTimeoutTimer, this));
+    mStopTimer->cancel();
 
-    mLastCommandMessage.axes[0].command_id = VESC_COMMAND_SET_DUTY;
-    mLastCommandMessage.axes[1].command_id = VESC_COMMAND_SET_DUTY;
-    mLastCommandMessage.axes[2].command_id = VESC_COMMAND_SET_DUTY;
-    mLastCommandMessage.axes[3].command_id = VESC_COMMAND_SET_DUTY;
-    mLastCommandMessage.axes[4].command_id = VESC_COMMAND_SET_DUTY;
-    mLastCommandMessage.axes[5].command_id = VESC_COMMAND_SET_DUTY;
-    mLastCommandMessage.gripper.command_id = VESC_COMMAND_SET_DUTY;
-
-    mLastCommandMessage.axes[0].set_value = 0.0f;
-    mLastCommandMessage.axes[1].set_value = 0.0f;
-    mLastCommandMessage.axes[2].set_value = 0.0f;
-    mLastCommandMessage.axes[3].set_value = 0.0f;
-    mLastCommandMessage.axes[4].set_value = 0.0f;
-    mLastCommandMessage.axes[5].set_value = 0.0f;
-    mLastCommandMessage.gripper.set_value = 0.0f;
-
-    mLastCommandMessage = rex_interfaces::msg::ManipulatorControl(mLastCommandMessage);
-    mLastCommandMessage.header.stamp.sec = 0;
+    mLastCommandMessage = mStopCommand;
 }
 
 void ManipulatorSimple::handleInput(rex_interfaces::msg::RoboticArmControl roboticArmControlMessage)
 {
     if (roboticArmControlMessage.action_type != rex_interfaces::msg::RoboticArmControl::ACTION_FORWARD_KIN)
     {
-        mLastCommandMessage = rex_interfaces::msg::ManipulatorControl{};
+        mLastCommandMessage = mStopCommand;
         if (roboticArmControlMessage.action_type == rex_interfaces::msg::RoboticArmControl::ACTION_STOP)
             publishCommand();
         return;
@@ -49,6 +61,7 @@ void ManipulatorSimple::handleInput(rex_interfaces::msg::RoboticArmControl robot
     mLastCommandMessage.axes[4].set_value = roboticArmControlMessage.joint_positions[4];
     mLastCommandMessage.axes[5].set_value = roboticArmControlMessage.joint_positions[5];
     mLastCommandMessage.gripper.set_value = roboticArmControlMessage.gripper;
+    mStopTimer->reset();
 }
 
 void ManipulatorSimple::handleRoverStatus(rex_interfaces::msg::RoverStatus::ConstSharedPtr msg)
@@ -61,9 +74,16 @@ void ManipulatorSimple::publishCommand()
 {
     if (mLastRoverStatus->communication_state != VESC_STATUS_10_COMMUNICATIONSTATE_OPENED || mLastRoverStatus->control_mode == VESC_STATUS_10_CONTROLMODE_ESTOP)
     {
-        mLastCommandMessage = rex_interfaces::msg::ManipulatorControl{};
+        mLastCommandMessage = mStopCommand;
     }
 
     mLastCommandMessage.header.stamp = rclcpp::Time();
     mPubCan->publish(mLastCommandMessage);
+}
+
+void ManipulatorSimple::handleTimeoutTimer()
+{
+    mStopTimer->cancel();
+    mLastCommandMessage = mStopCommand;
+    publishCommand();
 }
