@@ -59,16 +59,11 @@ void ManipulatorSimple::handleRoverStatus(rex_interfaces::msg::RoverStatus::Cons
 
 void ManipulatorSimple::publishCommand()
 {
-    rex_interfaces::msg::ManipulatorControl messageToSend;
+    if (mLastRoverStatus->communication_state != VESC_STATUS_10_COMMUNICATIONSTATE_OPENED || mLastRoverStatus->control_mode == VESC_STATUS_10_CONTROLMODE_ESTOP)
+    {
+        mLastCommandMessage = rex_interfaces::msg::ManipulatorControl{};
+    }
 
-    if (mLastRoverStatus->communication_state == VESC_STATUS_10_COMMUNICATIONSTATE_OPENED && mLastRoverStatus->control_mode != VESC_STATUS_10_CONTROLMODE_ESTOP)
-    {
-        messageToSend = rex_interfaces::msg::ManipulatorControl(mLastCommandMessage);
-    }
-    else
-    {
-        messageToSend = rex_interfaces::msg::ManipulatorControl();
-    }
-    messageToSend.header.stamp = rclcpp::Time();
-    mPubCan->publish(messageToSend);
+    mLastCommandMessage.header.stamp = rclcpp::Time();
+    mPubCan->publish(mLastCommandMessage);
 }
