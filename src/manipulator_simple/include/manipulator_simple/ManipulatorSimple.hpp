@@ -17,7 +17,6 @@ public:
 private:
     void handleInput(rex_interfaces::msg::RoboticArmControl roboticArmControlMessage);
     void handleRoverStatus(rex_interfaces::msg::RoverStatus::ConstSharedPtr msg);
-    void handleTimeoutTimer();
 
     void publishCommand();
 
@@ -31,6 +30,5 @@ private:
     rclcpp::Publisher<rex_interfaces::msg::ManipulatorControl>::SharedPtr mPubCan;
 
     rclcpp::TimerBase::SharedPtr mResenderTimer;
-    rclcpp::TimerBase::SharedPtr mStopTimer;
     rex_interfaces::msg::RoverStatus::ConstSharedPtr mLastRoverStatus;
 };

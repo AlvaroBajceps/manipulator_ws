@@ -38,8 +38,6 @@ ManipulatorSimple::ManipulatorSimple(rclcpp::Node::SharedPtr node)
     mPubCan = mNode->create_publisher<rex_interfaces::msg::ManipulatorControl>("/CAN/TX/manipulator_ctl", 100);
 
     mResenderTimer = mNode->create_timer(std::chrono::milliseconds(50), std::bind(&ManipulatorSimple::publishCommand, this));
-    mStopTimer = mNode->create_timer(std::chrono::milliseconds(500), std::bind(&ManipulatorSimple::handleTimeoutTimer, this));
-    mStopTimer->cancel();
 
     mLastCommandMessage = mStopCommand;
 }
@@ -61,7 +59,6 @@ void ManipulatorSimple::handleInput(rex_interfaces::msg::RoboticArmControl robot
     mLastCommandMessage.axes[4].set_value = roboticArmControlMessage.joint_positions[4];
     mLastCommandMessage.axes[5].set_value = roboticArmControlMessage.joint_positions[5];
     mLastCommandMessage.gripper.set_value = roboticArmControlMessage.gripper;
-    mStopTimer->reset();
 }
 
 void ManipulatorSimple::handleRoverStatus(rex_interfaces::msg::RoverStatus::ConstSharedPtr msg)
@@ -79,11 +76,4 @@ void ManipulatorSimple::publishCommand()
 
     mLastCommandMessage.header.stamp = rclcpp::Time();
     mPubCan->publish(mLastCommandMessage);
-}
-
-void ManipulatorSimple::handleTimeoutTimer()
-{
-    mStopTimer->cancel();
-    mLastCommandMessage = mStopCommand;
-    publishCommand();
 }
