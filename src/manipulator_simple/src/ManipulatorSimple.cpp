@@ -44,6 +44,8 @@ ManipulatorSimple::ManipulatorSimple(rclcpp::Node::SharedPtr node)
 
 void ManipulatorSimple::handleInput(rex_interfaces::msg::RoboticArmControl roboticArmControlMessage)
 {
+    // The assumption is that this package runs instead of the new inverse kinematics stack
+
     if (roboticArmControlMessage.action_type != rex_interfaces::msg::RoboticArmControl::ACTION_FORWARD_KIN)
     {
         mLastCommandMessage = mStopCommand;
@@ -63,15 +65,18 @@ void ManipulatorSimple::handleInput(rex_interfaces::msg::RoboticArmControl robot
 
 void ManipulatorSimple::handleRoverStatus(rex_interfaces::msg::RoverStatus::ConstSharedPtr msg)
 {
+    // This package is not responsible for stopping the arm after disabling ROBOTIC_ARM in RoverStatus
+    // See can_bridge instead
     mLastRoverStatus = msg;
-    publishCommand();
 }
 
 void ManipulatorSimple::publishCommand()
 {
-    if (mLastRoverStatus->communication_state != VESC_STATUS_10_COMMUNICATIONSTATE_OPENED || mLastRoverStatus->control_mode == VESC_STATUS_10_CONTROLMODE_ESTOP)
+    if ((mLastRoverStatus->control_mode & rex_interfaces::msg::RoverStatus::CONTROL_MODE_ROBOTIC_ARM) == 0)
     {
+        // Reset mLastCommandMessage so that the arm won't move after it's turned on again.
         mLastCommandMessage = mStopCommand;
+        return;
     }
 
     mLastCommandMessage.header.stamp = rclcpp::Time();
