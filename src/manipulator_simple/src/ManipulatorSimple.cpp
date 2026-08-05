@@ -1,4 +1,6 @@
 #include "manipulator_simple/ManipulatorSimple.hpp"
+#include <rclcpp_components/register_node_macro.hpp>
+RCLCPP_COMPONENTS_REGISTER_NODE(ManipulatorSimple)
 
 namespace
 {
@@ -26,18 +28,18 @@ namespace
     }
 }
 
-ManipulatorSimple::ManipulatorSimple(rclcpp::Node::SharedPtr node)
-    : mNode(node),
+ManipulatorSimple::ManipulatorSimple(const rclcpp::NodeOptions &options)
+    : Node("manipulator_simple", options),
       mStopCommand(prepareStopCommand()),
       mLastRoverStatus(std::make_shared<rex_interfaces::msg::RoverStatus>())
 {
-    mSubMqtt = mNode->create_subscription<rex_interfaces::msg::RoboticArmControl>("/MQTT/RoboticArmControl", 100, std::bind(&ManipulatorSimple::handleInput, this, std::placeholders::_1));
-    mSubStatus = mNode->create_subscription<rex_interfaces::msg::RoverStatus>(
+    mSubMqtt = create_subscription<rex_interfaces::msg::RoboticArmControl>("/MQTT/RoboticArmControl", 100, std::bind(&ManipulatorSimple::handleInput, this, std::placeholders::_1));
+    mSubStatus = create_subscription<rex_interfaces::msg::RoverStatus>(
         "/MQTT/RoverStatus",
         rclcpp::QoS(10), std::bind(&ManipulatorSimple::handleRoverStatus, this, std::placeholders::_1));
-    mPubCan = mNode->create_publisher<rex_interfaces::msg::ManipulatorControl>("/CAN/TX/manipulator_ctl", 100);
+    mPubCan = create_publisher<rex_interfaces::msg::ManipulatorControl>("/CAN/TX/manipulator_ctl", 100);
 
-    mResenderTimer = mNode->create_timer(std::chrono::milliseconds(50), std::bind(&ManipulatorSimple::publishCommand, this));
+    mResenderTimer = create_timer(std::chrono::milliseconds(50), std::bind(&ManipulatorSimple::publishCommand, this));
 
     mLastCommandMessage = mStopCommand;
 }

@@ -1,10 +1,11 @@
-# one to launch them all!
-
-### Example configuration:
 launch:
-
-- node:
-    pkg: "manipulator_simple"
-    exec: "manipulator_simple_node"
-    name: "manipulator_simple_node"
-    namespace: "raptor"
+  - node_container:
+      pkg: rclcpp_components
+      exec: component_container
+      name: manipulator_simple_component
+      namespace: "raptor"
+      composable_node:
+        - pkg: manipulator_simple
+          plugin: ManipulatorSimple
+          name: manipulator_simple_node
+          namespace: "raptor"
