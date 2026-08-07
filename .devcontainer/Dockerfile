@@ -1,24 +1,16 @@
 FROM wisniax/ros-rover-base:latest
 
-# devcontainers ***fix*** by ubuntu devs...
-# https://askubuntu.com/questions/1513927/ubuntu-24-04-docker-images-now-includes-user-ubuntu-with-uid-gid-1000
-RUN userdel -r ubuntu
-
 # Dockerfile for ROS-JAZZY
 ARG USERNAME='rex'
 ARG PASSWORD='changeme'
 ARG SSH_PORT=22
-ARG USER_UID=1001
-ARG USER_GID=1000
 
 # Default configuration
 ENV ROS_ENABLE_AUTOSTART=0
 ENV ROS_BUILD_ON_STARTUP=on-failure
 
 # Create user
-#RUN useradd -m -s /bin/bash ${USERNAME}
-RUN getent group ${USER_GID} || groupadd --gid ${USER_GID} ${USERNAME}
-RUN useradd -m -s /bin/bash --uid ${USER_UID} --gid ${USER_GID} ${USERNAME}
+RUN useradd -m -s /bin/bash -g 1000 ${USERNAME}
 RUN echo "${USERNAME}:${PASSWORD}" | chpasswd
 RUN usermod -aG sudo ${USERNAME}
 
@@ -38,13 +30,15 @@ RUN mkdir -p /home/${USERNAME}/raptor_ws
 WORKDIR /home/${USERNAME}/raptor_ws
 
 # Copy the local files to the container
-COPY --chown=${USER_UID}:${USER_GID} . /home/${USERNAME}/raptor_ws
+COPY --chown=${USERNAME}:${USERNAME} . /home/${USERNAME}/raptor_ws
 RUN rm -rf /home/${USERNAME}/raptor_ws/build
 RUN rm -rf /home/${USERNAME}/raptor_ws/log
 RUN rm -rf /home/${USERNAME}/raptor_ws/install
 
 # Fix github 'unsafe' directory
 RUN git config --global --add safe.directory /home/rex/raptor_ws
+RUN git config --global --add safe.directory /home/rex/raptor_ws/src/rex_interfaces
+RUN git config --global --add safe.directory /home/rex/raptor_ws/src/libVescCan
 
 # Look for submodules
 RUN git submodule update --init --recursive
@@ -57,7 +51,7 @@ RUN rm -rf /home/${USERNAME}/.ssh
 RUN mkdir -m 0700 /home/${USERNAME}/.ssh
 RUN touch /home/${USERNAME}/.ssh/authorized_keys
 RUN chmod 640 /home/${USERNAME}/.ssh/authorized_keys
-ADD --chown=${USER_UID}:${USER_GID} ./.devcontainer/public_keys.d /home/${USERNAME}/.ssh/public_keys.d
+ADD --chown=${USERNAME}:${USERNAME} ./.devcontainer/public_keys.d /home/${USERNAME}/.ssh/public_keys.d
 RUN cat /home/${USERNAME}/.ssh/public_keys.d/*.pub >> /home/${USERNAME}/.ssh/authorized_keys || true
 RUN rm -rf /home/${USERNAME}/.ssh/public_keys.d
 
