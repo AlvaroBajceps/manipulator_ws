@@ -5,7 +5,10 @@
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="marcinwal9@gmail.com">Marcin Walczyk</maintainer>
+  <maintainer email="adam.m.07130@gmail.com">Adam Marciniak</maintainer>
   <license>DBAD</license>
+
+  <depend>rclcpp_components</depend>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_ros</buildtool_depend>

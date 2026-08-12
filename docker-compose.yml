@@ -20,11 +20,12 @@ services:
         target: /mnt/local
         bind:
           create_host_path: true
-      - type: bind
-        source: ./.devcontainer/rex
-        target: /etc/init.d/rex
-        bind:
-          create_host_path: true
+      - ./.devcontainer/rex:/etc/init.d/rex:ro,Z
+      # - type: bind
+      #   source: ./.devcontainer/rex
+      #   target: /etc/init.d/rex
+      #   bind:
+      #     create_host_path: true
       - type: bind
         source: /dev/shm
         target: /dev/shm
