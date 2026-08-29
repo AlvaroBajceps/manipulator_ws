@@ -46,7 +46,7 @@ RUN bash -c "source /opt/ros/jazzy/setup.bash && colcon build --symlink-install 
 RUN rm -rf /home/${USERNAME}/.ssh
 RUN mkdir -m 0700 /home/${USERNAME}/.ssh
 
-COPY 50-sshd-raptors-docker.conf /etc/ssh/sshd_conf.d/50-sshd-raptors-docker.conf
+COPY .devcontainer/50-sshd-raptors-docker.conf /etc/ssh/sshd_conf.d/50-sshd-raptors-docker.conf
 
 USER root
 COPY .devcontainer/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
