@@ -2,9 +2,10 @@
 
 ## Build the container
 `docker compose build`
-> To enable passwordless ssh into rex: \
-> Copy your public ssh files to .devcontainer/public_keys.d \
-> **Note!** Do this step before building the container or rebuild after!
+> To enable passwordless ssh into rex:
+> Set $REX_CONTAINER_AUTHORIZED_KEYS to the path of a file with your public keys
+> (or set it to ~/.ssh/authorized_keys to use the same keys as the host)
+> **Note!** If you want to change the filepath used by the container, you have to recreate it.
 
 ## Start the container
 `docker compose up -d`

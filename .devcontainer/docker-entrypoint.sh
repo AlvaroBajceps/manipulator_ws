@@ -9,6 +9,8 @@ start_time=`date +%s.%N`
 # Stop script on errors
 set -e
 
+SSH_PORT=${SSH_PORT:-2522}
+
 # Most important thing: logo ;)
 echo "--------------------------------------------------------------------"
 echo 'ooooooooo.         .o.       ooooooooo.   ooooooooooooo   .oooooo.   ooooooooo.    .oooooo..o  '
@@ -26,23 +28,15 @@ echo "--------------------------------------------------------------------"
 echo "Loaded configuration:"
 echo " - ROS_ENABLE_AUTOSTART:  ${ROS_ENABLE_AUTOSTART}"
 echo " - ROS_BUILD_ON_STARTUP:  ${ROS_BUILD_ON_STARTUP}"
+echo " - SSH_PORT:  ${SSH_PORT}"
 
 echo "--------------------------------------------------------------------"
 
 rm -f /tmp/rexlaunch.pgid # remove old PGID file
 
+echo -e "Port ${SSH_PORT}\n" > /etc/ssh/sshd_config.d/90-dockerenv-ssh-port.conf
 if service ssh start; then
-    # Get the SSH port from the configuration file
-    SSH_PORT_CONFIGURED=$(grep -oP '^Port\s+\K\d+' /etc/ssh/sshd_config)
-
-    if [ -n "$SSH_PORT_CONFIGURED" ]; then
-        echo "To connect to the container, use ssh rex@localhost -p ${SSH_PORT_CONFIGURED}"
-    else
-        echo "SSH service started, but could not determine port from /etc/ssh/sshd_config."
-        echo "Please check the sshd_config file manually."
-    fi
-else
-    echo "SSH service failed to start"
+    echo "To connect to the container, use ssh rex@localhost -p ${SSH_PORT}"
 fi
 
 echo "--------------------------------------------------------------------"

@@ -3,7 +3,6 @@ FROM wisniax/ros-rover-base:latest
 # Dockerfile for ROS-JAZZY
 ARG USERNAME='rex'
 ARG PASSWORD='changeme'
-ARG SSH_PORT=22
 
 # Default configuration
 ENV ROS_ENABLE_AUTOSTART=0
@@ -13,9 +12,6 @@ ENV ROS_BUILD_ON_STARTUP=on-failure
 RUN useradd -m -s /bin/bash -g 1000 ${USERNAME}
 RUN echo "${USERNAME}:${PASSWORD}" | chpasswd
 RUN usermod -aG sudo ${USERNAME}
-
-# Change ssh port and expose it
-RUN sed -i "/^#\?Port/ { s/^#//; s/Port .*/Port ${SSH_PORT}/; }" /etc/ssh/sshd_config
 
 # Colorful prompts ah yee
 RUN sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/' /home/${USERNAME}/.bashrc
@@ -49,11 +45,8 @@ RUN bash -c "source /opt/ros/jazzy/setup.bash && colcon build --symlink-install 
 # Manage public ssh keys
 RUN rm -rf /home/${USERNAME}/.ssh
 RUN mkdir -m 0700 /home/${USERNAME}/.ssh
-RUN touch /home/${USERNAME}/.ssh/authorized_keys
-RUN chmod 640 /home/${USERNAME}/.ssh/authorized_keys
-ADD --chown=${USERNAME}:${USERNAME} ./.devcontainer/public_keys.d /home/${USERNAME}/.ssh/public_keys.d
-RUN cat /home/${USERNAME}/.ssh/public_keys.d/*.pub >> /home/${USERNAME}/.ssh/authorized_keys || true
-RUN rm -rf /home/${USERNAME}/.ssh/public_keys.d
+
+COPY 50-sshd-raptors-docker.conf /etc/ssh/sshd_conf.d/50-sshd-raptors-docker.conf
 
 USER root
 COPY .devcontainer/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
